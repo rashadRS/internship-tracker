@@ -7,6 +7,8 @@
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -362,9 +364,19 @@
 ══════════════════════════════════════════════════════ -->
 <script>
 /* ============================================================
-   CONSTANTS & STATE
+   CONSTANTS & STATE (SUPABASE)
    ============================================================ */
-const STORAGE_KEY = 'jobflow_v2_entries';
+// REPLACE THESE WITH YOUR SUPABASE PROJECT DETAILS
+const SUPABASE_URL = 'https://tnkwyosaenmcjrrutldg.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_CgVNcVzpKNs2yr2vshOcVg_BL4hYSbK';
+
+let supabase = null;
+if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+// Global data store to power the UI synchronously
+let appData = [];
 
 // Status config: label, Tailwind pill classes
 const STATUS_CONFIG = {
@@ -379,15 +391,60 @@ let currentTab = 'to-apply';
 let editingId   = null; // null = "add new" mode; a UUID = "edit" mode
 
 /* ============================================================
-   LOCAL STORAGE HELPERS
+   SUPABASE MAPPING HELPERS
    ============================================================ */
-function loadData() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
+// Maps internal JS camelCase objects to DB snake_case schema
+const mapToDb = (entry) => ({
+  id: entry.id,
+  name: entry.name,
+  domain: entry.domain,
+  title: entry.title,
+  location: entry.location,
+  hr_email: entry.hrEmail,
+  general_email: entry.genEmail,
+  notes: entry.notes,
+  status: entry.status,
+  applied_date: entry.appliedAt
+});
+
+// Maps DB snake_case rows to internal JS camelCase objects
+const mapFromDb = (row) => ({
+  id: row.id,
+  name: row.name,
+  domain: row.domain,
+  title: row.title,
+  location: row.location,
+  hrEmail: row.hr_email,
+  genEmail: row.general_email,
+  notes: row.notes,
+  status: row.status,
+  appliedAt: row.applied_date,
+  createdAt: row.created_at || new Date().toISOString()
+});
+
+/* ============================================================
+   DATA FETCHING
+   ============================================================ */
+async function fetchFromSupabase() {
+  if (!supabase) return;
+  const { data, error } = await supabase
+    .from('companies')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Supabase fetch error:', error);
+    showToast('❌', 'Error fetching data from Supabase');
+    return;
+  }
+  
+  appData = data.map(mapFromDb);
+  renderAll();
 }
 
-function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+// We keep a loadData function for backward compatibility with the rest of the JS code
+function loadData() {
+  return appData;
 }
 
 /* ============================================================
@@ -470,7 +527,7 @@ function checkDuplicate(value) {
 /* ============================================================
    FORM SUBMIT — handles both ADD NEW and UPDATE EXISTING
    ============================================================ */
-function handleSubmit(e) {
+async function handleSubmit(e) {
   e.preventDefault();
 
   const name     = document.getElementById('f-name').value.trim();
@@ -486,15 +543,23 @@ function handleSubmit(e) {
     return;
   }
 
-  const data = loadData();
+  // Ensure button doesn't fire multiple times
+  const submitBtn = document.getElementById('submit-btn');
+  submitBtn.disabled = true;
 
   if (editingId) {
     // ── UPDATE MODE ──────────────────────────────────────────
-    const idx = data.findIndex(e => e.id === editingId);
+    const idx = appData.findIndex(e => e.id === editingId);
     if (idx !== -1) {
-      // Preserve fields that are not in the form (status, appliedAt, createdAt, id)
-      data[idx] = { ...data[idx], name, domain, title, location, hrEmail, genEmail, notes };
-      saveData(data);
+      // Preserve fields that are not in the form
+      appData[idx] = { ...appData[idx], name, domain, title, location, hrEmail, genEmail, notes };
+      
+      // Sync to Supabase
+      if (supabase) {
+        const { error } = await supabase.from('companies').update(mapToDb(appData[idx])).eq('id', editingId);
+        if (error) console.error('Supabase update error:', error);
+      }
+      
       showToast('✏️', `"${name}" updated successfully!`);
     }
     resetForm();
@@ -507,12 +572,19 @@ function handleSubmit(e) {
       appliedAt: null,
       createdAt: new Date().toISOString(),
     };
-    data.unshift(entry);
-    saveData(data);
+    appData.unshift(entry);
+    
+    // Sync to Supabase
+    if (supabase) {
+      const { error } = await supabase.from('companies').insert([mapToDb(entry)]);
+      if (error) console.error('Supabase insert error:', error);
+    }
+    
     showToast('✅', `"${name}" saved to your To Apply list!`);
+    
     document.getElementById('company-form').reset();
     document.getElementById('duplicate-warning').classList.add('hidden');
-    document.getElementById('submit-btn').disabled = false;
+    submitBtn.disabled = false;
   }
 
   renderAll();
@@ -521,14 +593,17 @@ function handleSubmit(e) {
 /* ============================================================
    MARK AS APPLIED
    ============================================================ */
-function markApplied(id) {
-  const data  = loadData();
-  const entry = data.find(e => e.id === id);
+async function markApplied(id) {
+  const entry = appData.find(e => e.id === id);
   if (!entry) return;
 
   entry.status    = 'pending';
   entry.appliedAt = new Date().toISOString();
-  saveData(data);
+  
+  if (supabase) {
+    const { error } = await supabase.from('companies').update({ status: 'pending', applied_date: entry.appliedAt }).eq('id', id);
+    if (error) console.error('Supabase update error:', error);
+  }
 
   renderAll();
   switchTab('tracking');
@@ -538,25 +613,36 @@ function markApplied(id) {
 /* ============================================================
    UPDATE STATUS (Tracking Tab Dropdown)
    ============================================================ */
-function updateStatus(id, newStatus) {
-  const data  = loadData();
-  const entry = data.find(e => e.id === id);
+async function updateStatus(id, newStatus) {
+  const entry = appData.find(e => e.id === id);
   if (!entry) return;
 
   entry.status = newStatus;
-  saveData(data);
+  
+  if (supabase) {
+    const { error } = await supabase.from('companies').update({ status: newStatus }).eq('id', id);
+    if (error) console.error('Supabase update error:', error);
+  }
+  
   renderAll();
 }
 
 /* ============================================================
    DELETE ENTRY
    ============================================================ */
-function deleteEntry(id, name) {
+async function deleteEntry(id, name) {
   if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
-  const data = loadData().filter(e => e.id !== id);
-  saveData(data);
+  
+  appData = appData.filter(e => e.id !== id);
+  
+  if (supabase) {
+    const { error } = await supabase.from('companies').delete().eq('id', id);
+    if (error) console.error('Supabase delete error:', error);
+  }
+
   // If the deleted entry was being edited, also reset the form
   if (editingId === id) resetForm();
+  
   renderAll();
   showToast('🗑️', `"${name}" has been deleted.`);
 }
@@ -1002,7 +1088,22 @@ function escAttr(str) {
    INIT
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-  renderAll();
+  if (supabase) {
+    // Initial fetch
+    fetchFromSupabase();
+    
+    // Subscribe to real-time changes
+    supabase.channel('companies-all-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'companies' }, payload => {
+        // Trigger a fresh fetch so UI stays in sync automatically across devices
+        fetchFromSupabase();
+      })
+      .subscribe();
+  } else {
+    // Fallback if Supabase is not configured
+    renderAll();
+    showToast('⚠️', 'Configure Supabase keys in JS to enable real-time syncing.');
+  }
 });
 </script>
 
