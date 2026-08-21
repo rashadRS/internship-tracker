@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JobFlow — Job & Internship Tracker</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-in-out',
+            'slide-down': 'slideDown 0.3s ease-out',
+            'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn:    { '0%': { opacity: '0' },           '100%': { opacity: '1' } },
+            slideDown: { '0%': { opacity: '0', transform: 'translateY(-8px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            pulseSoft: { '0%,100%': { opacity: '1' }, '50%': { opacity: '0.6' } },
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 99px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+    /* ── Smooth transitions for dark-mode ── */
+    *, *::before, *::after { transition-property: background-color, border-color, color, fill, stroke; transition-duration: 200ms; transition-timing-function: ease; }
+
+    /* ── Card hover lift ── */
+    .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15); }
+    .dark .card-hover:hover { box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); }
+
+    /* ── Logo image ring ── */
+    .logo-ring { box-shadow: 0 0 0 2px #e2e8f0; }
+    .dark .logo-ring { box-shadow: 0 0 0 2px #334155; }
+
+    /* ── Focus ring override ── */
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.3);
+    }
+
+    /* ── Tab indicator bar ── */
+    .tab-active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      border-radius: 9px 9px 0 0;
+    }
+
+    /* ── Gradient header ── */
+    .header-gradient {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+    }
+
+    /* ── Empty state illustration ── */
+    .empty-icon { opacity: 0.35; }
+  </style>
+</head>
+
+<body class="bg-slate-100 dark:bg-slate-950 font-sans min-h-screen">
+
+<!-- ══════════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════════ -->
+<header class="header-gradient sticky top-0 z-50 shadow-xl">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3 flex-wrap">
+
+    <!-- Brand -->
+    <div class="flex items-center gap-2.5">
+      <!-- Briefcase SVG -->
+      <div class="bg-white/20 rounded-xl p-2">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-white font-bold text-lg leading-tight tracking-tight">JobFlow</h1>
+        <p class="text-indigo-200 text-[10px] font-medium tracking-widest uppercase">Tracker</p>
+      </div>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="flex items-center gap-2 flex-wrap">
+
+      <!-- Stats chips -->
+      <div id="stat-to-apply"
+        class="hidden sm:flex items-center gap-1 bg-white/15 rounded-full px-3 py-1 text-xs font-semibold text-white">
+        <span class="w-2 h-2 rounded-full bg-slate-300 inline-block"></span>
+        <span id="count-to-apply">0</span> Saved
+      </div>
+      <div id="stat-applied"
+        class="hidden sm:flex items-center gap-1 bg-white/15 rounded-full px-3 py-1 text-xs font-semibold text-white">
+        <span class="w-2 h-2 rounded-full bg-yellow-300 inline-block"></span>
+        <span id="count-applied">0</span> Applied
+      </div>
+
+      <!-- Export CSV -->
+      <button onclick="exportCSV()"
+        class="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        Export CSV
+      </button>
+
+      <!-- Dark Mode Toggle -->
+      <button id="theme-toggle" onclick="toggleDark()"
+        class="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all"
+        title="Toggle dark/light mode">
+        <!-- Sun icon (shown in dark mode) -->
+        <svg id="icon-sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <!-- Moon icon (shown in light mode) -->
+        <svg id="icon-moon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+        <span id="theme-label">Dark</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+
+<!-- ══════════════════════════════════════════════════════
+     MAIN LAYOUT
+══════════════════════════════════════════════════════ -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+  <!-- ── LEFT PANEL: ADD COMPANY FORM ── -->
+  <aside class="lg:col-span-1">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6 sticky top-24 animate-fade-in">
+
+      <div class="mb-5">
+        <div class="flex items-center justify-between gap-2">
+          <h2 id="form-title" class="text-slate-800 dark:text-slate-100 font-bold text-base flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+              <svg id="form-title-icon" class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+            </span>
+            Add Company
+          </h2>
+          <!-- Cancel edit button — hidden unless in edit mode -->
+          <button id="cancel-edit-btn" onclick="resetForm()" type="button"
+            class="hidden text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 flex items-center gap-1 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Cancel
+          </button>
+        </div>
+        <!-- Edit mode banner -->
+        <div id="edit-mode-banner"
+          class="hidden mt-2 flex items-center gap-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2">
+          <svg class="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+          </svg>
+          <p class="text-amber-700 dark:text-amber-300 text-[11px] font-medium">Editing existing entry — changes will update in place.</p>
+        </div>
+        <p id="form-subtitle" class="text-slate-500 dark:text-slate-400 text-xs mt-1">Fill in the details to save or track an application.</p>
+      </div>
+
+      <!-- ── DUPLICATE WARNING ── -->
+      <div id="duplicate-warning"
+        class="hidden mb-4 flex items-start gap-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl p-3 animate-slide-down">
+        <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+        </svg>
+        <p class="text-red-700 dark:text-red-300 text-xs font-medium leading-snug">
+          ⚠️ Warning: You have already applied or saved this company!
+        </p>
+      </div>
+
+      <form id="company-form" onsubmit="handleSubmit(event)" class="space-y-3.5" novalidate>
+
+        <!-- Company Name -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            Company Name <span class="text-red-500">*</span>
+          </label>
+          <input id="f-name" type="text" placeholder="e.g. Google"
+            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+            oninput="checkDuplicate(this.value)" required />
+        </div>
+
+        <!-- Domain -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            Website Domain
+            <span class="font-normal text-slate-400 dark:text-slate-500">(for logo)</span>
+          </label>
+          <input id="f-domain" type="text" placeholder="e.g. google.com"
+            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500" />
+        </div>
+
+        <!-- Job Title -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            Job / Internship Title <span class="text-red-500">*</span>
+          </label>
+          <input id="f-title" type="text" placeholder="e.g. Software Engineer Intern"
+            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500" required />
+        </div>
+
+        <!-- Location -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Location</label>
+          <input id="f-location" type="text" placeholder="e.g. New York, USA"
+            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500" />
+        </div>
+
+        <!-- Emails row -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">HR Email</label>
+            <input id="f-hr-email" type="email" placeholder="hr@company.com"
+              class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">General Email</label>
+            <input id="f-gen-email" type="email" placeholder="info@company.com"
+              class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500" />
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Private Notes</label>
+          <textarea id="f-notes" rows="3" placeholder="Interview prep, remarks, referral contact…"
+            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 resize-none"></textarea>
+        </div>
+
+        <!-- Submit -->
+        <button id="submit-btn" type="submit"
+          class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl text-sm transition-all shadow-md shadow-indigo-200 dark:shadow-indigo-900/40">
+          <svg id="submit-btn-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span id="submit-btn-label">Save Company</span>
+        </button>
+
+      </form>
+    </div>
+  </aside>
+
+  <!-- ── RIGHT PANEL: DASHBOARD TABS ── -->
+  <section class="lg:col-span-2 space-y-6">
+
+    <!-- ── SEARCH BAR ── -->
+    <div class="relative">
+      <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none"
+        fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+      </svg>
+      <input id="search-input" type="search" placeholder="Search by company name or job title…"
+        oninput="renderAll()"
+        class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl pl-10 pr-4 py-3 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm" />
+      <!-- Clear search indicator -->
+      <span id="search-count"
+        class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/40 dark:text-indigo-300 px-2 py-0.5 rounded-full">
+      </span>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="border-b border-slate-200 dark:border-slate-800 flex gap-1">
+
+      <button id="tab-btn-to-apply" onclick="switchTab('to-apply')"
+        class="tab-btn relative px-5 py-3 text-sm font-semibold text-indigo-600 dark:text-indigo-400 tab-active flex items-center gap-2 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+        </svg>
+        To Apply
+        <span id="badge-to-apply"
+          class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold">
+          0
+        </span>
+      </button>
+
+      <button id="tab-btn-tracking" onclick="switchTab('tracking')"
+        class="tab-btn relative px-5 py-3 text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-2 transition-all hover:text-slate-700 dark:hover:text-slate-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        Application Tracking
+        <span id="badge-tracking"
+          class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold">
+          0
+        </span>
+      </button>
+
+    </div>
+
+    <!-- ─── TO APPLY TAB ─── -->
+    <div id="tab-to-apply" class="animate-fade-in">
+      <div id="list-to-apply" class="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2"></div>
+      <div id="empty-to-apply" class="py-20 flex flex-col items-center text-center animate-fade-in">
+        <div class="empty-icon mb-4">
+          <svg class="w-24 h-24 text-slate-400 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <p class="text-slate-500 dark:text-slate-400 font-semibold text-sm">No saved companies yet</p>
+        <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Add a company using the form on the left!</p>
+      </div>
+    </div>
+
+    <!-- ─── TRACKING TAB ─── -->
+    <div id="tab-tracking" class="hidden animate-fade-in">
+      <div id="list-tracking" class="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-2"></div>
+      <div id="empty-tracking" class="py-20 flex flex-col items-center text-center animate-fade-in">
+        <div class="empty-icon mb-4">
+          <svg class="w-24 h-24 text-slate-400 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+        </div>
+        <p class="text-slate-500 dark:text-slate-400 font-semibold text-sm">No applications tracked yet</p>
+        <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Mark a saved company as applied to start tracking!</p>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+
+<!-- ══════════════════════════════════════════════════════
+     TOAST NOTIFICATION
+══════════════════════════════════════════════════════ -->
+<div id="toast"
+  class="fixed bottom-6 right-6 z-[999] hidden items-center gap-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-medium px-4 py-3 rounded-2xl shadow-2xl max-w-xs animate-slide-down">
+  <span id="toast-icon" class="text-lg">✅</span>
+  <span id="toast-msg"></span>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════ -->
+<script>
+/* ============================================================
+   CONSTANTS & STATE
+   ============================================================ */
+const STORAGE_KEY = 'jobflow_v2_entries';
+
+// Status config: label, Tailwind pill classes
+const STATUS_CONFIG = {
+  'to-apply': { label: 'To Apply',   classes: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300', dot: 'bg-slate-400' },
+  pending:    { label: 'Pending',    classes: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300', dot: 'bg-yellow-400' },
+  interview:  { label: 'Interview',  classes: 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300', dot: 'bg-violet-500' },
+  accepted:   { label: 'Accepted',   classes: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300', dot: 'bg-emerald-500' },
+  rejected:   { label: 'Rejected',   classes: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', dot: 'bg-red-500' },
+};
+
+let currentTab = 'to-apply';
+let editingId   = null; // null = "add new" mode; a UUID = "edit" mode
+
+/* ============================================================
+   LOCAL STORAGE HELPERS
+   ============================================================ */
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+/* ============================================================
+   DARK MODE
+   ============================================================ */
+(function initTheme() {
+  const saved = localStorage.getItem('jobflow_theme') || 'light';
+  applyTheme(saved);
+})();
+
+function applyTheme(theme) {
+  const html = document.documentElement;
+  const sun  = document.getElementById('icon-sun');
+  const moon = document.getElementById('icon-moon');
+  const lbl  = document.getElementById('theme-label');
+  if (theme === 'dark') {
+    html.classList.add('dark');
+    sun?.classList.remove('hidden');
+    moon?.classList.add('hidden');
+    if (lbl) lbl.textContent = 'Light';
+  } else {
+    html.classList.remove('dark');
+    sun?.classList.add('hidden');
+    moon?.classList.remove('hidden');
+    if (lbl) lbl.textContent = 'Dark';
+  }
+  localStorage.setItem('jobflow_theme', theme);
+}
+
+function toggleDark() {
+  const isDark = document.documentElement.classList.contains('dark');
+  applyTheme(isDark ? 'light' : 'dark');
+}
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+function switchTab(tab) {
+  currentTab = tab;
+  const tabs = ['to-apply', 'tracking'];
+  tabs.forEach(t => {
+    const panel  = document.getElementById(`tab-${t}`);
+    const btn    = document.getElementById(`tab-btn-${t}`);
+    if (t === tab) {
+      panel.classList.remove('hidden');
+      btn.classList.remove('text-slate-500','dark:text-slate-400','hover:text-slate-700','dark:hover:text-slate-300');
+      btn.classList.add('text-indigo-600','dark:text-indigo-400','tab-active');
+    } else {
+      panel.classList.add('hidden');
+      btn.classList.add('text-slate-500','dark:text-slate-400','hover:text-slate-700','dark:hover:text-slate-300');
+      btn.classList.remove('text-indigo-600','dark:text-indigo-400','tab-active');
+    }
+  });
+}
+
+/* ============================================================
+   DUPLICATE CHECKER
+   ============================================================ */
+function checkDuplicate(value) {
+  const data    = loadData();
+  const warning = document.getElementById('duplicate-warning');
+  const btn     = document.getElementById('submit-btn');
+  // Exclude the entry being edited from the duplicate check
+  const match   = data.some(e =>
+    e.name.trim().toLowerCase() === value.trim().toLowerCase() &&
+    e.id !== editingId
+  );
+
+  if (value.trim() && match) {
+    warning.classList.remove('hidden');
+    btn.disabled = true;
+    btn.classList.add('opacity-50','cursor-not-allowed');
+  } else {
+    warning.classList.add('hidden');
+    btn.disabled = false;
+    btn.classList.remove('opacity-50','cursor-not-allowed');
+  }
+}
+
+/* ============================================================
+   FORM SUBMIT — handles both ADD NEW and UPDATE EXISTING
+   ============================================================ */
+function handleSubmit(e) {
+  e.preventDefault();
+
+  const name     = document.getElementById('f-name').value.trim();
+  const domain   = document.getElementById('f-domain').value.trim();
+  const title    = document.getElementById('f-title').value.trim();
+  const location = document.getElementById('f-location').value.trim();
+  const hrEmail  = document.getElementById('f-hr-email').value.trim();
+  const genEmail = document.getElementById('f-gen-email').value.trim();
+  const notes    = document.getElementById('f-notes').value.trim();
+
+  if (!name || !title) {
+    showToast('⚠️', 'Company Name and Job Title are required.');
+    return;
+  }
+
+  const data = loadData();
+
+  if (editingId) {
+    // ── UPDATE MODE ──────────────────────────────────────────
+    const idx = data.findIndex(e => e.id === editingId);
+    if (idx !== -1) {
+      // Preserve fields that are not in the form (status, appliedAt, createdAt, id)
+      data[idx] = { ...data[idx], name, domain, title, location, hrEmail, genEmail, notes };
+      saveData(data);
+      showToast('✏️', `"${name}" updated successfully!`);
+    }
+    resetForm();
+  } else {
+    // ── ADD NEW MODE ─────────────────────────────────────────
+    const entry = {
+      id:        crypto.randomUUID(),
+      name, domain, title, location, hrEmail, genEmail, notes,
+      status:    'to-apply',
+      appliedAt: null,
+      createdAt: new Date().toISOString(),
+    };
+    data.unshift(entry);
+    saveData(data);
+    showToast('✅', `"${name}" saved to your To Apply list!`);
+    document.getElementById('company-form').reset();
+    document.getElementById('duplicate-warning').classList.add('hidden');
+    document.getElementById('submit-btn').disabled = false;
+  }
+
+  renderAll();
+}
+
+/* ============================================================
+   MARK AS APPLIED
+   ============================================================ */
+function markApplied(id) {
+  const data  = loadData();
+  const entry = data.find(e => e.id === id);
+  if (!entry) return;
+
+  entry.status    = 'pending';
+  entry.appliedAt = new Date().toISOString();
+  saveData(data);
+
+  renderAll();
+  switchTab('tracking');
+  showToast('📬', `"${entry.name}" moved to Application Tracking!`);
+}
+
+/* ============================================================
+   UPDATE STATUS (Tracking Tab Dropdown)
+   ============================================================ */
+function updateStatus(id, newStatus) {
+  const data  = loadData();
+  const entry = data.find(e => e.id === id);
+  if (!entry) return;
+
+  entry.status = newStatus;
+  saveData(data);
+  renderAll();
+}
+
+/* ============================================================
+   DELETE ENTRY
+   ============================================================ */
+function deleteEntry(id, name) {
+  if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+  const data = loadData().filter(e => e.id !== id);
+  saveData(data);
+  // If the deleted entry was being edited, also reset the form
+  if (editingId === id) resetForm();
+  renderAll();
+  showToast('🗑️', `"${name}" has been deleted.`);
+}
+
+/* ============================================================
+   EDIT ENTRY — populate form and enter edit mode
+   ============================================================ */
+function editEntry(id) {
+  const entry = loadData().find(e => e.id === id);
+  if (!entry) return;
+
+  // Populate form fields
+  document.getElementById('f-name').value     = entry.name;
+  document.getElementById('f-domain').value   = entry.domain;
+  document.getElementById('f-title').value    = entry.title;
+  document.getElementById('f-location').value = entry.location;
+  document.getElementById('f-hr-email').value = entry.hrEmail;
+  document.getElementById('f-gen-email').value= entry.genEmail;
+  document.getElementById('f-notes').value    = entry.notes;
+
+  // Switch UI to edit mode
+  editingId = id;
+  document.getElementById('form-title').innerHTML = `
+    <span class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+      <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    </span>
+    Edit Company`;
+  document.getElementById('submit-btn-label').textContent = 'Update Company';
+  document.getElementById('submit-btn-icon').innerHTML    =
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>';
+  document.getElementById('edit-mode-banner').classList.remove('hidden');
+  document.getElementById('cancel-edit-btn').classList.remove('hidden');
+  document.getElementById('form-subtitle').classList.add('hidden');
+  document.getElementById('duplicate-warning').classList.add('hidden');
+  document.getElementById('submit-btn').disabled = false;
+
+  // Scroll the form into view on mobile
+  document.getElementById('company-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ============================================================
+   RESET FORM — exit edit mode, return to Add Company state
+   ============================================================ */
+function resetForm() {
+  editingId = null;
+  document.getElementById('company-form').reset();
+  document.getElementById('form-title').innerHTML = `
+    <span class="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+      <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+      </svg>
+    </span>
+    Add Company`;
+  document.getElementById('submit-btn-label').textContent = 'Save Company';
+  document.getElementById('submit-btn-icon').innerHTML    =
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>';
+  document.getElementById('edit-mode-banner').classList.add('hidden');
+  document.getElementById('cancel-edit-btn').classList.add('hidden');
+  document.getElementById('form-subtitle').classList.remove('hidden');
+  document.getElementById('duplicate-warning').classList.add('hidden');
+  document.getElementById('submit-btn').disabled = false;
+}
+
+/* ============================================================
+   BUILD MAILTO LINK
+   ============================================================ */
+function buildMailto(email, title, company) {
+  if (!email) return '#';
+  const subject = encodeURIComponent(`Internship Application - ${title} - [Your Name]`);
+  const body    = encodeURIComponent(
+    `Dear Hiring Team at ${company},\n\n` +
+    `I am a 3rd-year student pursuing my degree in Software Engineering at Multimedia University (MMU). ` +
+    `I am writing to express my strong interest in the ${title} internship position at your company.\n\n` +
+    `I have a solid technical foundation in software development and I am eager to apply my skills in a practical environment, ` +
+    `while learning from your experienced team.\n\n` +
+    `Please find my resume attached for your consideration. I would welcome the opportunity to discuss how my background and enthusiasm align with your needs.\n\n` +
+    `Thank you for your time and consideration.\n\n` +
+    `Best regards,\n[Your Name]\n[Your Phone Number]\n[Your LinkedIn/GitHub URL]`
+  );
+  return `mailto:${email}?subject=${subject}&body=${body}`;
+}
+
+/* ============================================================
+   LOGO HELPER
+   ============================================================ */
+function logoHTML(domain, name) {
+  if (domain) {
+    return `
+      <img
+        src="https://logo.clearbit.com/${domain}"
+        alt="${name} logo"
+        class="w-10 h-10 rounded-xl object-contain bg-white logo-ring p-0.5"
+        onerror="this.outerHTML=fallbackLogo('${name}')"
+      />`;
+  }
+  return fallbackLogo(name);
+}
+
+function fallbackLogo(name) {
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const colors   = ['bg-indigo-500','bg-violet-500','bg-pink-500','bg-sky-500','bg-teal-500','bg-orange-500'];
+  const color    = colors[name.length % colors.length];
+  return `
+    <div class="w-10 h-10 rounded-xl ${color} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 logo-ring">
+      ${initials || '?'}
+    </div>`;
+}
+
+/* ============================================================
+   STATUS BADGE HTML
+   ============================================================ */
+function badgeHTML(status) {
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG['to-apply'];
+  return `
+    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${cfg.classes}">
+      <span class="w-1.5 h-1.5 rounded-full ${cfg.dot} inline-block"></span>
+      ${cfg.label}
+    </span>`;
+}
+
+/* ============================================================
+   FORMAT DATE
+   ============================================================ */
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+}
+
+/* ============================================================
+   RENDER: TO APPLY CARD
+   ============================================================ */
+function renderToApplyCard(entry) {
+  const mailtoHR  = buildMailto(entry.hrEmail, entry.title, entry.name);
+  const mailtoGen = buildMailto(entry.genEmail, entry.title, entry.name);
+
+  return `
+  <article class="card-hover bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-5 flex flex-col gap-3 animate-fade-in" data-id="${entry.id}">
+
+    <!-- Header -->
+    <div class="flex items-start gap-3">
+      ${logoHTML(entry.domain, entry.name)}
+      <div class="flex-1 min-w-0">
+        <h3 class="text-slate-800 dark:text-slate-100 font-bold text-sm leading-tight truncate">${escHTML(entry.name)}</h3>
+        <p class="text-slate-500 dark:text-slate-400 text-xs truncate mt-0.5">${escHTML(entry.title)}</p>
+      </div>
+      ${badgeHTML('to-apply')}
+    </div>
+
+    <!-- Details -->
+    <div class="space-y-1.5">
+      ${entry.location ? `
+        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0">
+          <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="truncate">${escHTML(entry.location)}</span>
+        </div>` : ''}
+
+      ${entry.hrEmail ? `
+        <div class="flex items-center gap-2 text-xs min-w-0">
+          <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <a href="${mailtoHR}"
+            class="text-indigo-600 dark:text-indigo-400 hover:underline truncate font-medium min-w-0"
+            title="Send email to HR">${escHTML(entry.hrEmail)}</a>
+          <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0">HR</span>
+        </div>` : ''}
+
+      ${entry.genEmail ? `
+        <div class="flex items-center gap-2 text-xs min-w-0">
+          <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <a href="${mailtoGen}"
+            class="text-indigo-600 dark:text-indigo-400 hover:underline truncate min-w-0"
+            title="Send general email">${escHTML(entry.genEmail)}</a>
+          <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0">General</span>
+        </div>` : ''}
+
+      <div class="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        Saved on ${formatDate(entry.createdAt)}
+      </div>
+    </div>
+
+    <!-- Notes (truncated) -->
+    ${entry.notes ? `
+      <div class="bg-slate-50 dark:bg-slate-800/70 rounded-xl px-3 py-2">
+        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3">${escHTML(entry.notes)}</p>
+      </div>` : ''}
+
+    <!-- Actions -->
+    <div class="flex gap-2 mt-auto pt-1 border-t border-slate-100 dark:border-slate-800">
+      <button onclick="markApplied('${entry.id}')"
+        class="flex-1 flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 rounded-xl transition-all">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        Mark as Applied
+      </button>
+      <!-- Edit button -->
+      <button onclick="editEntry('${entry.id}')"
+        class="flex items-center justify-center w-9 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 text-amber-500 rounded-xl transition-all"
+        title="Edit entry">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
+      <button onclick="deleteEntry('${entry.id}', '${escAttr(entry.name)}')"
+        class="flex items-center justify-center w-9 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-500 rounded-xl transition-all"
+        title="Delete entry">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>
+        </svg>
+      </button>
+    </div>
+
+  </article>`;
+}
+
+/* ============================================================
+   RENDER: TRACKING CARD
+   ============================================================ */
+function renderTrackingCard(entry) {
+  const mailtoHR  = buildMailto(entry.hrEmail, entry.title, entry.name);
+  const mailtoGen = buildMailto(entry.genEmail, entry.title, entry.name);
+
+  return `
+  <article class="card-hover bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-5 flex flex-col gap-3 animate-fade-in" data-id="${entry.id}">
+
+    <!-- Header -->
+    <div class="flex items-start gap-3">
+      ${logoHTML(entry.domain, entry.name)}
+      <div class="flex-1 min-w-0">
+        <h3 class="text-slate-800 dark:text-slate-100 font-bold text-sm leading-tight truncate">${escHTML(entry.name)}</h3>
+        <p class="text-slate-500 dark:text-slate-400 text-xs truncate mt-0.5">${escHTML(entry.title)}</p>
+      </div>
+      ${badgeHTML(entry.status)}
+    </div>
+
+    <!-- Details -->
+    <div class="space-y-1.5">
+      ${entry.location ? `
+        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0">
+          <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="truncate">${escHTML(entry.location)}</span>
+        </div>` : ''}
+
+      ${entry.hrEmail ? `
+        <div class="flex items-center gap-2 text-xs min-w-0">
+          <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <a href="${mailtoHR}"
+            class="text-indigo-600 dark:text-indigo-400 hover:underline truncate font-medium min-w-0">${escHTML(entry.hrEmail)}</a>
+          <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0">HR</span>
+        </div>` : ''}
+
+      ${entry.genEmail ? `
+        <div class="flex items-center gap-2 text-xs min-w-0">
+          <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <a href="${mailtoGen}"
+            class="text-indigo-600 dark:text-indigo-400 hover:underline truncate min-w-0">${escHTML(entry.genEmail)}</a>
+          <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0">General</span>
+        </div>` : ''}
+
+      <div class="grid grid-cols-2 gap-x-4 text-xs text-slate-400 dark:text-slate-500">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span class="truncate">Applied: ${formatDate(entry.appliedAt)}</span>
+        </div>
+        ${entry.domain ? `
+          <div class="flex items-center gap-1.5 min-w-0">
+            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/>
+            </svg>
+            <a href="https://${escHTML(entry.domain)}" target="_blank" rel="noopener"
+              class="text-indigo-500 hover:underline truncate">${escHTML(entry.domain)}</a>
+          </div>` : ''}
+      </div>
+    </div>
+
+    <!-- Notes -->
+    ${entry.notes ? `
+      <div class="bg-slate-50 dark:bg-slate-800/70 rounded-xl px-3 py-2">
+        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3">${escHTML(entry.notes)}</p>
+      </div>` : ''}
+
+    <!-- Status Dropdown + Edit + Delete -->
+    <div class="flex gap-2 mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 items-center">
+      <div class="flex-1">
+        <label class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1 uppercase tracking-wide">Update Status</label>
+        <select onchange="updateStatus('${entry.id}', this.value)"
+          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+          <option value="pending"   ${entry.status === 'pending'   ? 'selected' : ''}>⏳ Pending</option>
+          <option value="interview" ${entry.status === 'interview' ? 'selected' : ''}>🎤 Interview</option>
+          <option value="accepted"  ${entry.status === 'accepted'  ? 'selected' : ''}>🎉 Accepted</option>
+          <option value="rejected"  ${entry.status === 'rejected'  ? 'selected' : ''}>❌ Rejected</option>
+        </select>
+      </div>
+      <!-- Edit button -->
+      <button onclick="editEntry('${entry.id}')"
+        class="mt-4 flex items-center justify-center w-9 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 text-amber-500 rounded-xl transition-all h-9"
+        title="Edit entry">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
+      <button onclick="deleteEntry('${entry.id}', '${escAttr(entry.name)}')"
+        class="mt-4 flex items-center justify-center w-9 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-500 rounded-xl transition-all h-9"
+        title="Delete entry">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>
+        </svg>
+      </button>
+    </div>
+
+  </article>`;
+}
+
+/* ============================================================
+   RENDER ALL  (respects live search filter)
+   ============================================================ */
+function renderAll() {
+  const data  = loadData();
+  const query = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+
+  // Filter helper — matches company name OR job title
+  const matches = entry =>
+    !query ||
+    entry.name.toLowerCase().includes(query) ||
+    entry.title.toLowerCase().includes(query);
+
+  const toApply  = data.filter(e => e.status === 'to-apply' && matches(e));
+  const tracking = data.filter(e => e.status !== 'to-apply'  && matches(e));
+
+  // ── To Apply list ──
+  const listTA  = document.getElementById('list-to-apply');
+  const emptyTA = document.getElementById('empty-to-apply');
+  listTA.innerHTML  = toApply.map(renderToApplyCard).join('');
+  emptyTA.classList.toggle('hidden', toApply.length > 0);
+
+  // ── Tracking list ──
+  const listTK  = document.getElementById('list-tracking');
+  const emptyTK = document.getElementById('empty-tracking');
+  listTK.innerHTML  = tracking.map(renderTrackingCard).join('');
+  emptyTK.classList.toggle('hidden', tracking.length > 0);
+
+  // ── Badges & header stats (always show raw totals, not filtered) ──
+  const rawToApply  = data.filter(e => e.status === 'to-apply').length;
+  const rawTracking = data.filter(e => e.status !== 'to-apply').length;
+  document.getElementById('badge-to-apply').textContent = rawToApply;
+  document.getElementById('badge-tracking').textContent = rawTracking;
+  document.getElementById('count-to-apply').textContent = rawToApply;
+  document.getElementById('count-applied').textContent  = rawTracking;
+
+  // ── Search result count chip ──
+  const chip = document.getElementById('search-count');
+  if (query) {
+    const total = toApply.length + tracking.length;
+    chip.textContent = `${total} result${total !== 1 ? 's' : ''}`;
+    chip.classList.remove('hidden');
+  } else {
+    chip.classList.add('hidden');
+  }
+}
+
+/* ============================================================
+   EXPORT CSV
+   ============================================================ */
+function exportCSV() {
+  const data = loadData();
+  if (!data.length) { showToast('ℹ️', 'No data to export yet.'); return; }
+
+  const headers = ['ID','Company Name','Domain','Job Title','Location','HR Email','General Email','Status','Applied Date','Created Date','Notes'];
+  const rows    = data.map(e => [
+    e.id,
+    e.name,
+    e.domain,
+    e.title,
+    e.location,
+    e.hrEmail,
+    e.genEmail,
+    e.status,
+    formatDate(e.appliedAt),
+    formatDate(e.createdAt),
+    e.notes.replace(/\n/g, ' '),
+  ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`));
+
+  const csv  = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href: url,
+    download: `jobflow-export-${new Date().toISOString().slice(0,10)}.csv`,
+  });
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📄', 'CSV exported successfully!');
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimer;
+function showToast(icon, msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-msg').textContent  = msg;
+  toast.classList.remove('hidden');
+  toast.classList.add('flex');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.add('hidden');
+    toast.classList.remove('flex');
+  }, 3500);
+}
+
+/* ============================================================
+   ESCAPE HELPERS
+   ============================================================ */
+function escHTML(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(str) {
+  return String(str ?? '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderAll();
+});
+</script>
+
+</body>
+</html>
