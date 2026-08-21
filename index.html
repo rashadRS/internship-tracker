@@ -371,8 +371,11 @@ const SUPABASE_URL = 'https://tnkwyosaenmcjrrutldg.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_CgVNcVzpKNs2yr2vshOcVg_BL4hYSbK';
 
 let supabaseClient = null;
+// The CDN injects the `supabase` object globally. We use it to create our instance.
 if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (window.supabase) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
 }
 
 // Global data store to power the UI synchronously
@@ -426,8 +429,8 @@ const mapFromDb = (row) => ({
    DATA FETCHING
    ============================================================ */
 async function fetchFromSupabase() {
-  if (!supabase) return;
-  const { data, error } = await supabase
+  if (!supabaseClient) return;
+  const { data, error } = await supabaseClient
     .from('companies')
     .select('*')
     .order('created_at', { ascending: false });
@@ -555,8 +558,8 @@ async function handleSubmit(e) {
       appData[idx] = { ...appData[idx], name, domain, title, location, hrEmail, genEmail, notes };
       
       // Sync to Supabase
-      if (supabase) {
-        const { error } = await supabase.from('companies').update(mapToDb(appData[idx])).eq('id', editingId);
+      if (supabaseClient) {
+        const { error } = await supabaseClient.from('companies').update(mapToDb(appData[idx])).eq('id', editingId);
         if (error) console.error('Supabase update error:', error);
       }
       
@@ -575,8 +578,8 @@ async function handleSubmit(e) {
     appData.unshift(entry);
     
     // Sync to Supabase
-    if (supabase) {
-      const { error } = await supabase.from('companies').insert([mapToDb(entry)]);
+    if (supabaseClient) {
+      const { error } = await supabaseClient.from('companies').insert([mapToDb(entry)]);
       if (error) console.error('Supabase insert error:', error);
     }
     
@@ -600,8 +603,8 @@ async function markApplied(id) {
   entry.status    = 'pending';
   entry.appliedAt = new Date().toISOString();
   
-  if (supabase) {
-    const { error } = await supabase.from('companies').update({ status: 'pending', applied_date: entry.appliedAt }).eq('id', id);
+  if (supabaseClient) {
+    const { error } = await supabaseClient.from('companies').update({ status: 'pending', applied_date: entry.appliedAt }).eq('id', id);
     if (error) console.error('Supabase update error:', error);
   }
 
@@ -619,8 +622,8 @@ async function updateStatus(id, newStatus) {
 
   entry.status = newStatus;
   
-  if (supabase) {
-    const { error } = await supabase.from('companies').update({ status: newStatus }).eq('id', id);
+  if (supabaseClient) {
+    const { error } = await supabaseClient.from('companies').update({ status: newStatus }).eq('id', id);
     if (error) console.error('Supabase update error:', error);
   }
   
@@ -635,8 +638,8 @@ async function deleteEntry(id, name) {
   
   appData = appData.filter(e => e.id !== id);
   
-  if (supabase) {
-    const { error } = await supabase.from('companies').delete().eq('id', id);
+  if (supabaseClient) {
+    const { error } = await supabaseClient.from('companies').delete().eq('id', id);
     if (error) console.error('Supabase delete error:', error);
   }
 
@@ -1088,12 +1091,12 @@ function escAttr(str) {
    INIT
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-  if (supabase) {
+  if (supabaseClient) {
     // Initial fetch
     fetchFromSupabase();
     
     // Subscribe to real-time changes
-    supabase.channel('companies-all-channel')
+    supabaseClient.channel('companies-all-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'companies' }, payload => {
         // Trigger a fresh fetch so UI stays in sync automatically across devices
         fetchFromSupabase();
