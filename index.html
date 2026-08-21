@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JobFlow — Job & Internship Tracker</title>
+  <title>Trackr — Job & Internship Tracker</title>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -76,6 +76,10 @@
 
     /* ── Empty state illustration ── */
     .empty-icon { opacity: 0.35; }
+
+    /* ── Hide scrollbar for horizontal scrolling ── */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 
@@ -98,7 +102,7 @@
         </svg>
       </div>
       <div>
-        <h1 class="text-white font-bold text-lg leading-tight tracking-tight">JobFlow</h1>
+        <h1 class="text-white font-bold text-lg leading-tight tracking-tight">Trackr</h1>
         <p class="text-indigo-200 text-[10px] font-medium tracking-widest uppercase">Tracker</p>
       </div>
     </div>
@@ -235,7 +239,7 @@
         </div>
 
         <!-- Emails row -->
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">HR Email</label>
             <input id="f-hr-email" type="email" placeholder="hr@company.com"
@@ -287,10 +291,10 @@
     </div>
 
     <!-- Tab Bar -->
-    <div class="border-b border-slate-200 dark:border-slate-800 flex gap-1">
+    <div class="border-b border-slate-200 dark:border-slate-800 flex overflow-x-auto hide-scrollbar whitespace-nowrap gap-1">
 
       <button id="tab-btn-to-apply" onclick="switchTab('to-apply')"
-        class="tab-btn relative px-5 py-3 text-sm font-semibold text-indigo-600 dark:text-indigo-400 tab-active flex items-center gap-2 transition-all">
+        class="tab-btn relative px-5 py-3 text-sm font-semibold text-indigo-600 dark:text-indigo-400 tab-active flex items-center gap-2 transition-all flex-shrink-0">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
         </svg>
@@ -302,7 +306,7 @@
       </button>
 
       <button id="tab-btn-tracking" onclick="switchTab('tracking')"
-        class="tab-btn relative px-5 py-3 text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-2 transition-all hover:text-slate-700 dark:hover:text-slate-300">
+        class="tab-btn relative px-5 py-3 text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-2 transition-all hover:text-slate-700 dark:hover:text-slate-300 flex-shrink-0">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
         </svg>
@@ -454,7 +458,7 @@ function loadData() {
    DARK MODE
    ============================================================ */
 (function initTheme() {
-  const saved = localStorage.getItem('jobflow_theme') || 'light';
+  const saved = localStorage.getItem('trackr_theme') || 'light';
   applyTheme(saved);
 })();
 
@@ -474,7 +478,7 @@ function applyTheme(theme) {
     moon?.classList.remove('hidden');
     if (lbl) lbl.textContent = 'Dark';
   }
-  localStorage.setItem('jobflow_theme', theme);
+  localStorage.setItem('trackr_theme', theme);
 }
 
 function toggleDark() {
@@ -844,7 +848,7 @@ function renderToApplyCard(entry) {
       </div>` : ''}
 
     <!-- Actions -->
-    <div class="flex gap-2 mt-auto pt-1 border-t border-slate-100 dark:border-slate-800">
+    <div class="flex flex-wrap sm:flex-nowrap gap-2 mt-auto pt-1 border-t border-slate-100 dark:border-slate-800">
       <button onclick="markApplied('${entry.id}')"
         class="flex-1 flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 rounded-xl transition-all">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -854,14 +858,14 @@ function renderToApplyCard(entry) {
       </button>
       <!-- Edit button -->
       <button onclick="editEntry('${entry.id}')"
-        class="flex items-center justify-center w-9 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 text-amber-500 rounded-xl transition-all"
+        class="flex flex-1 sm:flex-none items-center justify-center sm:w-9 h-9 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 text-amber-500 rounded-xl transition-all"
         title="Edit entry">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
         </svg>
       </button>
       <button onclick="deleteEntry('${entry.id}', '${escAttr(entry.name)}')"
-        class="flex items-center justify-center w-9 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-500 rounded-xl transition-all"
+        class="flex flex-1 sm:flex-none items-center justify-center sm:w-9 h-9 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-500 rounded-xl transition-all"
         title="Delete entry">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -923,7 +927,7 @@ function renderTrackingCard(entry) {
           <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0">General</span>
         </div>` : ''}
 
-      <div class="grid grid-cols-2 gap-x-4 text-xs text-slate-400 dark:text-slate-500">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-4 text-xs text-slate-400 dark:text-slate-500">
         <div class="flex items-center gap-1.5 min-w-0">
           <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -948,8 +952,8 @@ function renderTrackingCard(entry) {
       </div>` : ''}
 
     <!-- Status Dropdown + Edit + Delete -->
-    <div class="flex gap-2 mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 items-center">
-      <div class="flex-1">
+    <div class="flex flex-wrap sm:flex-nowrap gap-2 mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 items-end sm:items-center">
+      <div class="w-full sm:flex-1">
         <label class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1 uppercase tracking-wide">Update Status</label>
         <select onchange="updateStatus('${entry.id}', this.value)"
           class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
@@ -961,14 +965,14 @@ function renderTrackingCard(entry) {
       </div>
       <!-- Edit button -->
       <button onclick="editEntry('${entry.id}')"
-        class="mt-4 flex items-center justify-center w-9 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 text-amber-500 rounded-xl transition-all h-9"
+        class="sm:mt-4 mt-1 flex flex-1 sm:flex-none items-center justify-center sm:w-9 h-9 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 text-amber-500 rounded-xl transition-all"
         title="Edit entry">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
         </svg>
       </button>
       <button onclick="deleteEntry('${entry.id}', '${escAttr(entry.name)}')"
-        class="mt-4 flex items-center justify-center w-9 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-500 rounded-xl transition-all h-9"
+        class="sm:mt-4 mt-1 flex flex-1 sm:flex-none items-center justify-center sm:w-9 h-9 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-500 rounded-xl transition-all"
         title="Delete entry">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -1053,7 +1057,7 @@ function exportCSV() {
   const url  = URL.createObjectURL(blob);
   const a    = Object.assign(document.createElement('a'), {
     href: url,
-    download: `jobflow-export-${new Date().toISOString().slice(0,10)}.csv`,
+    download: `trackr-export-${new Date().toISOString().slice(0,10)}.csv`,
   });
   a.click();
   URL.revokeObjectURL(url);
