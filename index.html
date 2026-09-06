@@ -87,10 +87,24 @@
     }
 
     /* ── Modal Animations ── */
-    .modal-overlay { opacity: 0; visibility: hidden; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
-    .modal-overlay.open { opacity: 1; visibility: visible; }
-    .modal-content { transform: scale(0.95) translateY(10px); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
-    .modal-overlay.open .modal-content { transform: scale(1) translateY(0); }
+    .modal-overlay { 
+      opacity: 0; 
+      visibility: hidden; 
+      pointer-events: none;
+      transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    .modal-overlay.open { 
+      opacity: 1; 
+      visibility: visible; 
+      pointer-events: auto;
+    }
+    .modal-content { 
+      transform: scale(0.95) translateY(10px); 
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    .modal-overlay.open .modal-content { 
+      transform: scale(1) translateY(0); 
+    }
 
     .empty-icon { opacity: 0.35; }
   </style>
@@ -277,9 +291,9 @@
 <!-- ══════════════════════════════════════════════════════
      ADD / EDIT COMPANY MODAL
 ══════════════════════════════════════════════════════ -->
-<div id="modal-backdrop" class="modal-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto w-full">
+<div id="modal-backdrop" class="modal-overlay hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto w-full">
   
-  <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl relative my-auto min-w-0">
+  <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl relative my-auto min-w-0" onclick="event.stopPropagation()">
     <!-- Close Button -->
     <button onclick="closeModal()" type="button" class="absolute top-5 right-5 p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-full transition-colors z-10">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -506,19 +520,36 @@ function toggleDark() {
    ============================================================ */
 function openModal() {
   const modal = document.getElementById('modal-backdrop');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  void modal.offsetWidth; // force reflow for smooth animation
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 function closeModal() {
   const modal = document.getElementById('modal-backdrop');
+  if (!modal) return;
   modal.classList.remove('open');
+  setTimeout(() => {
+    if (!modal.classList.contains('open')) {
+      modal.classList.add('hidden');
+    }
+  }, 250);
   document.body.style.overflow = '';
-  setTimeout(resetForm, 250); // reset after animation
+  resetForm();
 }
 
+// Close modal when clicking on the dark backdrop area
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('modal-backdrop');
+  if (modal && e.target === modal) {
+    closeModal();
+  }
+});
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.getElementById('modal-backdrop').classList.contains('open')) {
+  if (e.key === 'Escape' && document.getElementById('modal-backdrop')?.classList.contains('open')) {
     closeModal();
   }
 });
@@ -557,19 +588,68 @@ function checkDuplicate(value) {
   );
 
   if (value.trim() && match) {
-    warning.classList.remove('hidden');
-    btn.disabled = true;
+    warning?.classList.remove('hidden');
+    if (btn) btn.disabled = true;
   } else {
-    warning.classList.add('hidden');
-    btn.disabled = false;
+    warning?.classList.add('hidden');
+    if (btn) btn.disabled = false;
   }
 }
 
 /* ============================================================
-   FORM SUBMIT
+   SAVE / UPDATE / FORM SUBMIT
    ============================================================ */
+async function saveCompany(formData) {
+  const entry = {
+    id:        crypto.randomUUID(),
+    name:      formData.name,
+    domain:    formData.domain,
+    title:     formData.title,
+    location:  formData.location,
+    hrEmail:   formData.hrEmail,
+    genEmail:  formData.genEmail,
+    notes:     formData.notes,
+    status:    'to-apply',
+    appliedAt: null,
+    createdAt: new Date().toISOString(),
+  };
+
+  appData.unshift(entry);
+  renderAll(); // Immediate UI re-render
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from('companies').insert([mapToDb(entry)]);
+      if (error) console.error('Supabase insert error:', error);
+    } catch (err) {
+      console.error('Supabase insert exception:', err);
+    }
+  }
+
+  return entry;
+}
+
+async function updateCompany(id, formData) {
+  const idx = appData.findIndex(e => e.id === id);
+  if (idx !== -1) {
+    appData[idx] = { ...appData[idx], ...formData };
+    renderAll(); // Immediate UI re-render
+
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient.from('companies').update(mapToDb(appData[idx])).eq('id', id);
+        if (error) console.error('Supabase update error:', error);
+      } catch (err) {
+        console.error('Supabase update exception:', err);
+      }
+    }
+
+    return appData[idx];
+  }
+}
+
 async function handleSubmit(e) {
-  e.preventDefault();
+  if (e && e.preventDefault) e.preventDefault();
 
   const name     = document.getElementById('f-name').value.trim();
   const domain   = document.getElementById('f-domain').value.trim();
@@ -585,37 +665,26 @@ async function handleSubmit(e) {
   }
 
   const submitBtn = document.getElementById('submit-btn');
-  submitBtn.disabled = true;
+  if (submitBtn) submitBtn.disabled = true;
 
-  if (editingId) {
-    const idx = appData.findIndex(e => e.id === editingId);
-    if (idx !== -1) {
-      appData[idx] = { ...appData[idx], name, domain, title, location, hrEmail, genEmail, notes };
-      if (supabaseClient) {
-        const { error } = await supabaseClient.from('companies').update(mapToDb(appData[idx])).eq('id', editingId);
-        if (error) console.error('Supabase update error:', error);
-      }
-      showToast('✏️', `"${name}" updated successfully!`);
-    }
+  const isEditing = Boolean(editingId);
+  const currentId = editingId;
+
+  // Immediately close modal & reset form for crisp UX
+  closeModal();
+
+  if (isEditing) {
+    await updateCompany(currentId, { name, domain, title, location, hrEmail, genEmail, notes });
+    showToast('✏️', `"${name}" updated successfully!`);
   } else {
-    const entry = {
-      id:        crypto.randomUUID(),
-      name, domain, title, location, hrEmail, genEmail, notes,
-      status:    'to-apply',
-      appliedAt: null,
-      createdAt: new Date().toISOString(),
-    };
-    appData.unshift(entry);
-    
-    if (supabaseClient) {
-      const { error } = await supabaseClient.from('companies').insert([mapToDb(entry)]);
-      if (error) console.error('Supabase insert error:', error);
-    }
+    await saveCompany({ name, domain, title, location, hrEmail, genEmail, notes });
     showToast('✅', `"${name}" saved successfully!`);
   }
 
+  // Ensure dashboard is fully re-rendered with new/updated data
   renderAll();
-  closeModal();
+
+  if (submitBtn) submitBtn.disabled = false;
 }
 
 /* ============================================================
@@ -628,14 +697,18 @@ async function markApplied(id) {
   entry.status    = 'pending';
   entry.appliedAt = new Date().toISOString();
   
-  if (supabaseClient) {
-    const { error } = await supabaseClient.from('companies').update({ status: 'pending', applied_date: entry.appliedAt }).eq('id', id);
-    if (error) console.error('Supabase update error:', error);
-  }
-
   renderAll();
   switchTab('tracking');
   showToast('📬', `"${entry.name}" moved to Application Tracking!`);
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from('companies').update({ status: 'pending', applied_date: entry.appliedAt }).eq('id', id);
+      if (error) console.error('Supabase update error:', error);
+    } catch (err) {
+      console.error('Supabase update error:', err);
+    }
+  }
 }
 
 async function updateStatus(id, newStatus) {
@@ -643,24 +716,33 @@ async function updateStatus(id, newStatus) {
   if (!entry) return;
 
   entry.status = newStatus;
-  if (supabaseClient) {
-    const { error } = await supabaseClient.from('companies').update({ status: newStatus }).eq('id', id);
-    if (error) console.error('Supabase update error:', error);
-  }
   renderAll();
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from('companies').update({ status: newStatus }).eq('id', id);
+      if (error) console.error('Supabase update error:', error);
+    } catch (err) {
+      console.error('Supabase update error:', err);
+    }
+  }
 }
 
 async function deleteEntry(id, name) {
   if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
   
   appData = appData.filter(e => e.id !== id);
-  
-  if (supabaseClient) {
-    const { error } = await supabaseClient.from('companies').delete().eq('id', id);
-    if (error) console.error('Supabase delete error:', error);
-  }
   renderAll();
   showToast('🗑️', `"${name}" has been deleted.`);
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from('companies').delete().eq('id', id);
+      if (error) console.error('Supabase delete error:', error);
+    } catch (err) {
+      console.error('Supabase delete error:', err);
+    }
+  }
 }
 
 /* ============================================================
@@ -688,28 +770,35 @@ function editEntry(id) {
     <span class="truncate">Edit Application</span>`;
   document.getElementById('submit-btn-label').textContent = 'Update Company';
   document.getElementById('submit-btn-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>';
-  document.getElementById('edit-mode-banner').classList.remove('hidden');
-  document.getElementById('duplicate-warning').classList.add('hidden');
-  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('edit-mode-banner')?.classList.remove('hidden');
+  document.getElementById('duplicate-warning')?.classList.add('hidden');
+  const submitBtn = document.getElementById('submit-btn');
+  if (submitBtn) submitBtn.disabled = false;
 
   openModal();
 }
 
 function resetForm() {
   editingId = null;
-  document.getElementById('company-form').reset();
-  document.getElementById('form-title').innerHTML = `
-    <span class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center flex-shrink-0">
-      <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-      </svg>
-    </span>
-    <span class="truncate">Add New Application</span>`;
-  document.getElementById('submit-btn-label').textContent = 'Save Company';
-  document.getElementById('submit-btn-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>';
-  document.getElementById('edit-mode-banner').classList.add('hidden');
-  document.getElementById('duplicate-warning').classList.add('hidden');
-  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('company-form')?.reset();
+  const formTitle = document.getElementById('form-title');
+  if (formTitle) {
+    formTitle.innerHTML = `
+      <span class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+      </span>
+      <span class="truncate">Add New Application</span>`;
+  }
+  const submitLabel = document.getElementById('submit-btn-label');
+  if (submitLabel) submitLabel.textContent = 'Save Company';
+  const submitIcon = document.getElementById('submit-btn-icon');
+  if (submitIcon) submitIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>';
+  document.getElementById('edit-mode-banner')?.classList.add('hidden');
+  document.getElementById('duplicate-warning')?.classList.add('hidden');
+  const submitBtn = document.getElementById('submit-btn');
+  if (submitBtn) submitBtn.disabled = false;
 }
 
 /* ============================================================
