@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en" class="light overflow-x-hidden max-w-full">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Trackr — Job & Internship Tracker</title>
 
   <!-- Tailwind CSS CDN -->
@@ -33,6 +33,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <style>
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
     /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -86,30 +96,30 @@
   </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-950 font-sans min-h-screen pb-24 sm:pb-8">
+<body class="bg-slate-50 dark:bg-slate-950 font-sans min-h-screen pb-24 sm:pb-8 w-full max-w-full overflow-x-hidden">
 
 <!-- ══════════════════════════════════════════════════════
      HEADER
 ══════════════════════════════════════════════════════ -->
-<header class="header-gradient sticky top-0 z-40 shadow-lg">
+<header class="header-gradient sticky top-0 z-40 shadow-lg w-full">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3 flex-wrap">
 
     <!-- Brand -->
-    <div class="flex items-center gap-2.5">
-      <div class="bg-white/20 rounded-xl p-2 shadow-sm">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div class="bg-white/20 rounded-xl p-2 shadow-sm flex-shrink-0">
         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
           <path stroke-linecap="round" stroke-linejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
         </svg>
       </div>
-      <div>
-        <h1 class="text-white font-bold text-lg leading-tight tracking-tight">Trackr</h1>
+      <div class="min-w-0">
+        <h1 class="text-white font-bold text-lg leading-tight tracking-tight truncate">Trackr</h1>
         <p class="text-indigo-200 text-[10px] font-medium tracking-widest uppercase">Dashboard</p>
       </div>
     </div>
 
     <!-- Right Controls -->
-    <div class="flex items-center gap-2 flex-wrap">
+    <div class="flex items-center gap-2 flex-shrink-0">
       <!-- Export CSV -->
       <button onclick="exportCSV()"
         class="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all backdrop-blur-sm">
@@ -138,52 +148,52 @@
 <!-- ══════════════════════════════════════════════════════
      MAIN DASHBOARD
 ══════════════════════════════════════════════════════ -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 w-full min-w-0">
 
   <!-- ── DASHBOARD ANALYTICS WIDGET ── -->
-  <section class="grid grid-cols-2 md:grid-cols-4 gap-4 animate-slide-down">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 animate-slide-down w-full min-w-0">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 min-w-0">
       <div class="flex items-center gap-2 mb-1">
-        <div class="w-2 h-2 rounded-full bg-slate-400"></div>
-        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Saved</p>
+        <div class="w-2 h-2 rounded-full bg-slate-400 flex-shrink-0"></div>
+        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">Total Saved</p>
       </div>
-      <p id="dash-total" class="text-2xl font-bold text-slate-800 dark:text-white">0</p>
+      <p id="dash-total" class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white truncate">0</p>
     </div>
     
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 min-w-0">
       <div class="flex items-center gap-2 mb-1">
-        <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
-        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">To Apply</p>
+        <div class="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></div>
+        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">To Apply</p>
       </div>
-      <p id="dash-to-apply" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">0</p>
+      <p id="dash-to-apply" class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-400 truncate">0</p>
     </div>
 
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 min-w-0">
       <div class="flex items-center gap-2 mb-1">
-        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Applied</p>
+        <div class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></div>
+        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">Applied</p>
       </div>
-      <p id="dash-applied" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">0</p>
+      <p id="dash-applied" class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 truncate">0</p>
     </div>
 
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 min-w-0">
       <div class="flex items-center gap-2 mb-1">
-        <div class="w-2 h-2 rounded-full bg-violet-500"></div>
-        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Interviews</p>
+        <div class="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0"></div>
+        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">Interviews</p>
       </div>
-      <p id="dash-interviews" class="text-2xl font-bold text-violet-600 dark:text-violet-400">0</p>
+      <p id="dash-interviews" class="text-xl sm:text-2xl font-bold text-violet-600 dark:text-violet-400 truncate">0</p>
     </div>
   </section>
 
   <!-- ── SEARCH & ADD BUTTON ROW ── -->
-  <section class="flex gap-3 items-center">
+  <section class="flex gap-3 items-center w-full min-w-0">
     <!-- Search Bar -->
-    <div class="relative flex-1">
+    <div class="relative flex-1 min-w-0">
       <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none"
         fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
       </svg>
-      <input id="search-input" type="search" placeholder="Search by company or job title…"
+      <input id="search-input" type="search" placeholder="Search company or job title…"
         oninput="renderAll()"
         class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl pl-11 pr-4 py-3.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
       <span id="search-count"
@@ -201,34 +211,34 @@
   </section>
 
   <!-- ── TABS & LISTS ── -->
-  <section class="space-y-6">
+  <section class="space-y-6 w-full min-w-0">
     <!-- Tab Bar -->
-    <div class="border-b border-slate-200 dark:border-slate-800 flex overflow-x-auto hide-scrollbar whitespace-nowrap gap-2">
+    <div class="border-b border-slate-200 dark:border-slate-800 flex overflow-x-auto hide-scrollbar whitespace-nowrap gap-2 w-full pb-0.5">
       <button id="tab-btn-to-apply" onclick="switchTab('to-apply')"
-        class="tab-btn relative px-5 py-3 text-sm font-semibold text-indigo-600 dark:text-indigo-400 tab-active flex items-center gap-2 transition-all flex-shrink-0">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        class="tab-btn relative px-4 sm:px-5 py-3 text-sm font-semibold text-indigo-600 dark:text-indigo-400 tab-active flex items-center gap-2 transition-all flex-shrink-0">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
         </svg>
-        To Apply
+        <span>To Apply</span>
         <span id="badge-to-apply" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold">0</span>
       </button>
 
       <button id="tab-btn-tracking" onclick="switchTab('tracking')"
-        class="tab-btn relative px-5 py-3 text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-2 transition-all hover:text-slate-700 dark:hover:text-slate-300 flex-shrink-0">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        class="tab-btn relative px-4 sm:px-5 py-3 text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-2 transition-all hover:text-slate-700 dark:hover:text-slate-300 flex-shrink-0">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
         </svg>
-        Application Tracking
+        <span>Application Tracking</span>
         <span id="badge-tracking" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold">0</span>
       </button>
     </div>
 
     <!-- TO APPLY LIST -->
-    <div id="tab-to-apply" class="animate-fade-in">
-      <div id="list-to-apply" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
-      <div id="empty-to-apply" class="py-24 flex flex-col items-center text-center animate-fade-in">
+    <div id="tab-to-apply" class="animate-fade-in w-full min-w-0">
+      <div id="list-to-apply" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full min-w-0"></div>
+      <div id="empty-to-apply" class="py-24 flex flex-col items-center text-center animate-fade-in w-full">
         <div class="empty-icon mb-4">
-          <svg class="w-24 h-24 text-slate-400 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+          <svg class="w-20 sm:w-24 h-20 sm:h-24 text-slate-400 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
           </svg>
         </div>
@@ -238,11 +248,11 @@
     </div>
 
     <!-- TRACKING LIST -->
-    <div id="tab-tracking" class="hidden animate-fade-in">
-      <div id="list-tracking" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
-      <div id="empty-tracking" class="py-24 flex flex-col items-center text-center animate-fade-in">
+    <div id="tab-tracking" class="hidden animate-fade-in w-full min-w-0">
+      <div id="list-tracking" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full min-w-0"></div>
+      <div id="empty-tracking" class="py-24 flex flex-col items-center text-center animate-fade-in w-full">
         <div class="empty-icon mb-4">
-          <svg class="w-24 h-24 text-slate-400 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
+          <svg class="w-20 sm:w-24 h-20 sm:h-24 text-slate-400 dark:text-slate-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
           </svg>
         </div>
@@ -267,9 +277,9 @@
 <!-- ══════════════════════════════════════════════════════
      ADD / EDIT COMPANY MODAL
 ══════════════════════════════════════════════════════ -->
-<div id="modal-backdrop" class="modal-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+<div id="modal-backdrop" class="modal-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto w-full">
   
-  <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl relative my-auto">
+  <div class="modal-content bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl relative my-auto min-w-0">
     <!-- Close Button -->
     <button onclick="closeModal()" type="button" class="absolute top-5 right-5 p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-full transition-colors z-10">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -285,7 +295,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
             </svg>
           </span>
-          Add New Application
+          <span class="truncate">Add New Application</span>
         </h2>
         <!-- Edit mode banner -->
         <div id="edit-mode-banner" class="hidden mt-3 flex items-center gap-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2">
@@ -306,7 +316,7 @@
         </p>
       </div>
 
-      <form id="company-form" onsubmit="handleSubmit(event)" class="space-y-4" novalidate>
+      <form id="company-form" onsubmit="handleSubmit(event)" class="space-y-4 w-full" novalidate>
         
         <div>
           <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Company Name <span class="text-red-500">*</span></label>
@@ -355,7 +365,7 @@
         <div class="pt-2">
           <button id="submit-btn" type="submit"
             class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-md shadow-indigo-200 dark:shadow-indigo-900/40">
-            <svg id="submit-btn-icon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <svg id="submit-btn-icon" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
             </svg>
             <span id="submit-btn-label">Save Company</span>
@@ -372,8 +382,8 @@
 ══════════════════════════════════════════════════════ -->
 <div id="toast"
   class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] hidden items-center gap-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-sm font-medium px-5 py-3.5 rounded-full shadow-2xl max-w-xs sm:max-w-md w-max animate-slide-down">
-  <span id="toast-icon" class="text-lg">✅</span>
-  <span id="toast-msg"></span>
+  <span id="toast-icon" class="text-lg flex-shrink-0">✅</span>
+  <span id="toast-msg" class="truncate"></span>
 </div>
 
 
@@ -675,7 +685,7 @@ function editEntry(id) {
         <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
       </svg>
     </span>
-    Edit Application`;
+    <span class="truncate">Edit Application</span>`;
   document.getElementById('submit-btn-label').textContent = 'Update Company';
   document.getElementById('submit-btn-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>';
   document.getElementById('edit-mode-banner').classList.remove('hidden');
@@ -694,7 +704,7 @@ function resetForm() {
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>
     </span>
-    Add New Application`;
+    <span class="truncate">Add New Application</span>`;
   document.getElementById('submit-btn-label').textContent = 'Save Company';
   document.getElementById('submit-btn-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>';
   document.getElementById('edit-mode-banner').classList.add('hidden');
@@ -723,7 +733,7 @@ function buildMailto(email, title, company) {
 
 function logoHTML(domain, name) {
   if (domain) {
-    return `<img src="https://logo.clearbit.com/${domain}" alt="${name} logo" class="w-12 h-12 rounded-xl object-contain bg-white logo-ring p-0.5" onerror="this.outerHTML=fallbackLogo('${name}')" />`;
+    return `<img src="https://logo.clearbit.com/${domain}" alt="${name} logo" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-contain bg-white logo-ring p-0.5 flex-shrink-0" onerror="this.outerHTML=fallbackLogo('${name}')" />`;
   }
   return fallbackLogo(name);
 }
@@ -732,14 +742,14 @@ function fallbackLogo(name) {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const colors   = ['bg-indigo-500','bg-violet-500','bg-pink-500','bg-sky-500','bg-teal-500','bg-orange-500'];
   const color    = colors[name.length % colors.length];
-  return `<div class="w-12 h-12 rounded-xl ${color} flex items-center justify-center text-white text-sm font-bold flex-shrink-0 logo-ring">${initials || '?'}</div>`;
+  return `<div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl ${color} flex items-center justify-center text-white text-sm font-bold flex-shrink-0 logo-ring">${initials || '?'}</div>`;
 }
 
 function badgeHTML(status) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG['to-apply'];
   return `
-    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${cfg.classes}">
-      <span class="w-1.5 h-1.5 rounded-full ${cfg.dot} inline-block"></span>
+    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${cfg.classes} whitespace-nowrap">
+      <span class="w-1.5 h-1.5 rounded-full ${cfg.dot} inline-block flex-shrink-0"></span>
       ${cfg.label}
     </span>`;
 }
@@ -757,64 +767,71 @@ function renderToApplyCard(entry) {
   const mailtoGen = buildMailto(entry.genEmail, entry.title, entry.name);
 
   return `
-  <article class="card-hover bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-5 flex flex-col gap-4 animate-fade-in" data-id="${entry.id}">
+  <article class="card-hover bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-5 flex flex-col gap-4 animate-fade-in w-full min-w-0 max-w-full overflow-hidden" data-id="${entry.id}">
     
-    <div class="flex items-start gap-3">
-      ${logoHTML(entry.domain, entry.name)}
-      <div class="flex-1 min-w-0">
-        <h3 class="text-slate-800 dark:text-slate-100 font-bold text-base leading-tight truncate">${escHTML(entry.name)}</h3>
-        <p class="text-slate-500 dark:text-slate-400 text-xs truncate mt-1">${escHTML(entry.title)}</p>
+    <div class="flex items-start justify-between gap-3 w-full min-w-0">
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        ${logoHTML(entry.domain, entry.name)}
+        <div class="min-w-0 flex-1">
+          <h3 class="text-slate-800 dark:text-slate-100 font-bold text-base leading-tight truncate">${escHTML(entry.name)}</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-xs truncate mt-1">${escHTML(entry.title)}</p>
+        </div>
+      </div>
+      <div class="flex-shrink-0">
+        ${badgeHTML('to-apply')}
       </div>
     </div>
 
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2 w-full min-w-0">
       ${entry.location ? `
-        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0">
+        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0 w-full">
           <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          <span class="truncate">${escHTML(entry.location)}</span>
+          <span class="truncate min-w-0 flex-1">${escHTML(entry.location)}</span>
         </div>` : ''}
 
       ${entry.hrEmail ? `
-        <div class="flex items-center gap-2 text-xs min-w-0">
+        <div class="flex items-center gap-2 text-xs min-w-0 w-full">
           <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          <a href="${mailtoHR}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate font-medium min-w-0">${escHTML(entry.hrEmail)}</a>
+          <a href="${mailtoHR}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate font-medium min-w-0 flex-1" title="Send email to HR">${escHTML(entry.hrEmail)}</a>
           <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0 uppercase font-semibold">HR</span>
         </div>` : ''}
 
       ${entry.genEmail ? `
-        <div class="flex items-center gap-2 text-xs min-w-0">
+        <div class="flex items-center gap-2 text-xs min-w-0 w-full">
           <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          <a href="${mailtoGen}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate min-w-0">${escHTML(entry.genEmail)}</a>
+          <a href="${mailtoGen}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate min-w-0 flex-1" title="Send general email">${escHTML(entry.genEmail)}</a>
           <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0 uppercase font-semibold">General</span>
         </div>` : ''}
 
-      <div class="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+      <div class="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 w-full min-w-0">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Saved ${formatDate(entry.createdAt)}
+        <span class="truncate">Saved ${formatDate(entry.createdAt)}</span>
       </div>
     </div>
 
     ${entry.notes ? `
-      <div class="bg-slate-50 dark:bg-slate-800/70 rounded-xl px-3 py-2 mt-1">
-        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3">${escHTML(entry.notes)}</p>
+      <div class="bg-slate-50 dark:bg-slate-800/70 rounded-xl px-3 py-2 mt-1 w-full min-w-0">
+        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 break-words">${escHTML(entry.notes)}</p>
       </div>` : ''}
 
-    <div class="flex flex-col gap-2 mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+    <div class="flex flex-col gap-2.5 mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 w-full min-w-0">
       <button onclick="markApplied('${entry.id}')"
         class="w-full flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold py-2.5 rounded-xl transition-all">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-        Mark as Applied
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        <span>Mark as Applied</span>
       </button>
-      <div class="grid grid-cols-2 gap-2 w-full">
+      <div class="grid grid-cols-2 gap-2 w-full min-w-0">
         <button onclick="editEntry('${entry.id}')"
-          class="flex items-center justify-center py-2.5 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 text-amber-500 rounded-xl transition-all"
+          class="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 text-amber-600 dark:text-amber-400 font-medium text-xs rounded-xl transition-all"
           title="Edit entry">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Edit</span>
         </button>
         <button onclick="deleteEntry('${entry.id}', '${escAttr(entry.name)}')"
-          class="flex items-center justify-center py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-500 rounded-xl transition-all"
+          class="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-medium text-xs rounded-xl transition-all"
           title="Delete entry">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          <span>Delete</span>
         </button>
       </div>
     </div>
@@ -826,47 +843,49 @@ function renderTrackingCard(entry) {
   const mailtoGen = buildMailto(entry.genEmail, entry.title, entry.name);
 
   return `
-  <article class="card-hover bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-5 flex flex-col gap-4 animate-fade-in" data-id="${entry.id}">
+  <article class="card-hover bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-5 flex flex-col gap-4 animate-fade-in w-full min-w-0 max-w-full overflow-hidden" data-id="${entry.id}">
     
-    <div class="flex items-start gap-3">
-      ${logoHTML(entry.domain, entry.name)}
-      <div class="flex-1 min-w-0">
-        <h3 class="text-slate-800 dark:text-slate-100 font-bold text-base leading-tight truncate">${escHTML(entry.name)}</h3>
-        <p class="text-slate-500 dark:text-slate-400 text-xs truncate mt-1">${escHTML(entry.title)}</p>
+    <div class="flex items-start justify-between gap-3 w-full min-w-0">
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        ${logoHTML(entry.domain, entry.name)}
+        <div class="min-w-0 flex-1">
+          <h3 class="text-slate-800 dark:text-slate-100 font-bold text-base leading-tight truncate">${escHTML(entry.name)}</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-xs truncate mt-1">${escHTML(entry.title)}</p>
+        </div>
       </div>
-      <div class="flex-shrink-0 mt-0.5">
+      <div class="flex-shrink-0">
         ${badgeHTML(entry.status)}
       </div>
     </div>
 
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2 w-full min-w-0">
       ${entry.location ? `
-        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0">
+        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0 w-full">
           <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          <span class="truncate">${escHTML(entry.location)}</span>
+          <span class="truncate min-w-0 flex-1">${escHTML(entry.location)}</span>
         </div>` : ''}
 
       ${entry.hrEmail ? `
-        <div class="flex items-center gap-2 text-xs min-w-0">
+        <div class="flex items-center gap-2 text-xs min-w-0 w-full">
           <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          <a href="${mailtoHR}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate font-medium min-w-0">${escHTML(entry.hrEmail)}</a>
+          <a href="${mailtoHR}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate font-medium min-w-0 flex-1" title="Send email to HR">${escHTML(entry.hrEmail)}</a>
           <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0 uppercase font-semibold">HR</span>
         </div>` : ''}
 
       ${entry.genEmail ? `
-        <div class="flex items-center gap-2 text-xs min-w-0">
+        <div class="flex items-center gap-2 text-xs min-w-0 w-full">
           <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          <a href="${mailtoGen}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate min-w-0">${escHTML(entry.genEmail)}</a>
+          <a href="${mailtoGen}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate min-w-0 flex-1" title="Send general email">${escHTML(entry.genEmail)}</a>
           <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0 uppercase font-semibold">General</span>
         </div>` : ''}
         
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-400 dark:text-slate-500">
-        <div class="flex items-center gap-1.5 min-w-0">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-slate-400 dark:text-slate-500 w-full min-w-0 pt-1">
+        <div class="flex items-center gap-1.5 min-w-0 truncate">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span class="truncate">Applied ${formatDate(entry.appliedAt)}</span>
         </div>
         ${entry.domain ? `
-          <div class="flex items-center gap-1.5 min-w-0">
+          <div class="flex items-center gap-1.5 min-w-0 truncate">
             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
             <a href="https://${escHTML(entry.domain)}" target="_blank" rel="noopener" class="text-indigo-500 hover:underline truncate">${escHTML(entry.domain)}</a>
           </div>` : ''}
@@ -874,30 +893,33 @@ function renderTrackingCard(entry) {
     </div>
 
     ${entry.notes ? `
-      <div class="bg-slate-50 dark:bg-slate-800/70 rounded-xl px-3 py-2 mt-1">
-        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3">${escHTML(entry.notes)}</p>
+      <div class="bg-slate-50 dark:bg-slate-800/70 rounded-xl px-3 py-2 mt-1 w-full min-w-0">
+        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 break-words">${escHTML(entry.notes)}</p>
       </div>` : ''}
 
-    <div class="flex flex-col gap-2 mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
-      <div class="w-full">
+    <div class="flex flex-col gap-2.5 mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 w-full min-w-0">
+      <div class="w-full min-w-0">
+        <label class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1 uppercase tracking-wide">Update Status</label>
         <select onchange="updateStatus('${entry.id}', this.value)"
-          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer focus:ring-2 focus:ring-indigo-500">
+          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer focus:ring-2 focus:ring-indigo-500 max-w-full">
           <option value="pending"   ${entry.status === 'pending'   ? 'selected' : ''}>⏳ Pending</option>
           <option value="interview" ${entry.status === 'interview' ? 'selected' : ''}>🎤 Interview</option>
           <option value="accepted"  ${entry.status === 'accepted'  ? 'selected' : ''}>🎉 Accepted</option>
           <option value="rejected"  ${entry.status === 'rejected'  ? 'selected' : ''}>❌ Rejected</option>
         </select>
       </div>
-      <div class="grid grid-cols-2 gap-2 w-full">
+      <div class="grid grid-cols-2 gap-2 w-full min-w-0">
         <button onclick="editEntry('${entry.id}')"
-          class="flex items-center justify-center py-2.5 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 text-amber-500 rounded-xl transition-all"
+          class="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/40 text-amber-600 dark:text-amber-400 font-medium text-xs rounded-xl transition-all"
           title="Edit entry">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Edit</span>
         </button>
         <button onclick="deleteEntry('${entry.id}', '${escAttr(entry.name)}')"
-          class="flex items-center justify-center py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-500 rounded-xl transition-all"
+          class="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-medium text-xs rounded-xl transition-all"
           title="Delete entry">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          <span>Delete</span>
         </button>
       </div>
     </div>
