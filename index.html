@@ -9,6 +9,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Supabase JS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SheetJS CDN (for CSV, XLS, XLSX parsing) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -78,7 +81,7 @@
       bottom: -1px; left: 0; right: 0;
       height: 3px;
       background: linear-gradient(90deg, #6366f1, #8b5cf6);
-      border-radius: 9px 9px 0 0;
+      border-radius: 99px 99px 0 0;
     }
 
     /* ── Gradient header ── */
@@ -134,9 +137,21 @@
 
     <!-- Right Controls -->
     <div class="flex items-center gap-2 flex-shrink-0">
+      <!-- Import CSV/Excel -->
+      <button onclick="triggerImport()"
+        class="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all backdrop-blur-sm"
+        title="Import companies from CSV or Excel file">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 8l5-5 5 5M12 3v12"/>
+        </svg>
+        <span class="hidden sm:inline">Import CSV/Excel</span>
+      </button>
+      <input type="file" id="import-file-input" accept=".csv, .xls, .xlsx" onchange="handleFileImport(event)" class="hidden" />
+
       <!-- Export CSV -->
       <button onclick="exportCSV()"
-        class="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all backdrop-blur-sm">
+        class="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all backdrop-blur-sm"
+        title="Export data to CSV">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
         </svg>
@@ -257,7 +272,7 @@
           </svg>
         </div>
         <p class="text-slate-500 dark:text-slate-400 font-semibold text-sm">No saved companies yet</p>
-        <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Tap the Add Company button to get started!</p>
+        <p class="text-slate-400 dark:text-slate-500 text-xs mt-1">Tap Add Company or Import CSV/Excel to get started!</p>
       </div>
     </div>
 
@@ -302,7 +317,7 @@
     </button>
 
     <div class="p-6 sm:p-8">
-      <div class="mb-6 pr-8">
+      <div class="mb-4 pr-8">
         <h2 id="form-title" class="text-slate-800 dark:text-slate-100 font-bold text-lg flex items-center gap-2">
           <span class="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center flex-shrink-0">
             <svg id="form-title-icon" class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -318,6 +333,15 @@
           </svg>
           <p class="text-amber-700 dark:text-amber-300 text-[11px] font-medium">Editing existing entry.</p>
         </div>
+      </div>
+
+      <!-- Quick Bulk Import Link in Modal -->
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+        <span class="text-xs text-slate-500 dark:text-slate-400">Have a spreadsheet?</span>
+        <button type="button" onclick="closeModal(); triggerImport();" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 8l5-5 5 5M12 3v12"/></svg>
+          Bulk Import CSV/Excel
+        </button>
       </div>
 
       <!-- DUPLICATE WARNING -->
@@ -688,6 +712,166 @@ async function handleSubmit(e) {
 }
 
 /* ============================================================
+   CSV / EXCEL BULK IMPORT LOGIC
+   ============================================================ */
+function triggerImport() {
+  const input = document.getElementById('import-file-input');
+  if (input) {
+    input.value = '';
+    input.click();
+  }
+}
+
+function findHeaderKey(keys, keywords) {
+  for (const kw of keywords) {
+    const matched = keys.find(k => String(k).toLowerCase().replace(/[^a-z0-9]/g, '').includes(kw));
+    if (matched) return matched;
+  }
+  return null;
+}
+
+function getRowValue(row, keys, keywords) {
+  const k = findHeaderKey(keys, keywords);
+  return k && row[k] !== undefined && row[k] !== null ? row[k] : '';
+}
+
+function sanitizeStatus(val) {
+  if (!val) return 'to-apply';
+  const s = String(val).toLowerCase().trim();
+  if (s.includes('accept') || s.includes('offer') || s.includes('hired')) return 'accepted';
+  if (s.includes('reject') || s.includes('declin') || s.includes('closed')) return 'rejected';
+  if (s.includes('interview') || s.includes('screen')) return 'interview';
+  if (s.includes('pend') || s.includes('appli') || s.includes('submit') || s.includes('review')) return 'pending';
+  return 'to-apply';
+}
+
+function parseDateValue(val) {
+  if (!val) return null;
+  if (val instanceof Date && !isNaN(val)) return val.toISOString();
+  const d = new Date(val);
+  return !isNaN(d.getTime()) ? d.toISOString() : null;
+}
+
+async function handleFileImport(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (typeof XLSX === 'undefined') {
+    showToast('❌', 'SheetJS library not loaded. Check internet connection.');
+    return;
+  }
+
+  showToast('⏳', 'Reading spreadsheet file…');
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+      
+      const sheetName = workbook.SheetNames[0];
+      if (!sheetName) {
+        showToast('⚠️', 'No worksheet found in file.');
+        return;
+      }
+      
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+      if (!jsonRows || jsonRows.length === 0) {
+        showToast('⚠️', 'No data rows found in the uploaded file.');
+        return;
+      }
+
+      const newEntries = [];
+      const dbRows = [];
+      const nowIso = new Date().toISOString();
+
+      for (const rawRow of jsonRows) {
+        const keys = Object.keys(rawRow);
+        if (!keys.length) continue;
+
+        let nameVal = getRowValue(rawRow, keys, ['company', 'organization', 'firm', 'name']);
+        let titleVal = getRowValue(rawRow, keys, ['title', 'position', 'job', 'role']);
+        let domainVal = getRowValue(rawRow, keys, ['domain', 'website', 'url', 'site']);
+        let locationVal = getRowValue(rawRow, keys, ['location', 'city', 'country', 'place']);
+        let hrEmailVal = getRowValue(rawRow, keys, ['hremail', 'hr']);
+        let genEmailVal = getRowValue(rawRow, keys, ['generalemail', 'general', 'info', 'email']);
+        
+        if (hrEmailVal === genEmailVal && genEmailVal) {
+          const emailKey = findHeaderKey(keys, ['email']);
+          if (emailKey && emailKey.toLowerCase().includes('hr')) {
+            genEmailVal = '';
+          } else {
+            hrEmailVal = '';
+          }
+        }
+
+        let notesVal = getRowValue(rawRow, keys, ['note', 'remark', 'comment']);
+        let rawStatus = getRowValue(rawRow, keys, ['status', 'stage', 'state']);
+        let statusVal = sanitizeStatus(rawStatus);
+        let rawDate = getRowValue(rawRow, keys, ['applied', 'date']);
+        let appliedVal = parseDateValue(rawDate);
+
+        if (!nameVal && keys.length > 0) {
+          nameVal = rawRow[keys[0]];
+        }
+
+        if (!nameVal || String(nameVal).trim() === '') continue;
+
+        const entry = {
+          id: crypto.randomUUID(),
+          name: String(nameVal).trim(),
+          domain: String(domainVal).trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, ''),
+          title: String(titleVal).trim() || 'Software Engineer Intern',
+          location: String(locationVal).trim(),
+          hrEmail: String(hrEmailVal).trim(),
+          genEmail: String(genEmailVal).trim(),
+          notes: String(notesVal).trim(),
+          status: statusVal,
+          appliedAt: appliedVal || (statusVal !== 'to-apply' ? nowIso : null),
+          createdAt: nowIso
+        };
+
+        newEntries.push(entry);
+        dbRows.push(mapToDb(entry));
+      }
+
+      if (newEntries.length === 0) {
+        showToast('⚠️', 'No valid company rows found to import.');
+        return;
+      }
+
+      showToast('⏳', `Importing ${newEntries.length} companies…`);
+
+      // Optimistic local update
+      appData = [...newEntries, ...appData];
+      renderAll();
+
+      // Batch insert to Supabase
+      if (supabaseClient) {
+        const BATCH_SIZE = 100;
+        for (let i = 0; i < dbRows.length; i += BATCH_SIZE) {
+          const chunk = dbRows.slice(i, i + BATCH_SIZE);
+          const { error } = await supabaseClient.from('companies').insert(chunk);
+          if (error) {
+            console.error(`Batch insert error (batch starting index ${i}):`, error);
+          }
+        }
+      }
+
+      showToast('🎉', `Successfully imported ${newEntries.length} companies!`);
+
+    } catch (err) {
+      console.error('Import error:', err);
+      showToast('❌', 'Error processing spreadsheet file.');
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+/* ============================================================
    ITEM ACTIONS
    ============================================================ */
 async function markApplied(id) {
@@ -888,7 +1072,7 @@ function renderToApplyCard(entry) {
       ${entry.genEmail ? `
         <div class="flex items-center gap-2 text-xs min-w-0 w-full">
           <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          <a href="${mailtoGen}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate min-w-0 flex-1" title="Send general email">${escHTML(entry.genEmail)}</a>
+          <a href="${mailtoGen}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate font-medium min-w-0 flex-1" title="Send general email">${escHTML(entry.genEmail)}</a>
           <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0 uppercase font-semibold">General</span>
         </div>` : ''}
 
@@ -964,7 +1148,7 @@ function renderTrackingCard(entry) {
       ${entry.genEmail ? `
         <div class="flex items-center gap-2 text-xs min-w-0 w-full">
           <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          <a href="${mailtoGen}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate min-w-0 flex-1" title="Send general email">${escHTML(entry.genEmail)}</a>
+          <a href="${mailtoGen}" class="text-indigo-600 dark:text-indigo-400 hover:underline truncate font-medium min-w-0 flex-1" title="Send general email">${escHTML(entry.genEmail)}</a>
           <span class="text-slate-300 dark:text-slate-600 text-[10px] flex-shrink-0 uppercase font-semibold">General</span>
         </div>` : ''}
         
@@ -1082,6 +1266,21 @@ function exportCSV() {
 /* ============================================================
    UTILS & INIT
    ============================================================ */
+let toastTimer;
+function showToast(icon, msg) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-msg').textContent  = msg;
+  toast.classList.remove('hidden');
+  toast.classList.add('flex');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.add('hidden');
+    toast.classList.remove('flex');
+  }, 4000);
+}
+
 function escHTML(str) { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(str) { return String(str ?? '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
